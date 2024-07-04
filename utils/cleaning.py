@@ -6,7 +6,6 @@ def cleaning_pipeline(data, save_folder, save_filename):
 
     Parameters:
     - data (DataFrame): Input DataFrame containing movie data
-    - list_drop (list): List of column names to drop from the DataFrame
     - save_folder (str): Folder path where the cleaned CSV file will be saved
     - save_filename (str): Filename for the cleaned CSV file
 
