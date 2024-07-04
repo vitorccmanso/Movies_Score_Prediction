@@ -1,5 +1,20 @@
 import os
 
+
+def certificate_grouping(certificate_name):
+    if certificate_name in ["U", "G", "A", "Passed", "Approved"]:
+        return "All certificates"
+    elif certificate_name in ["PG", "TV-PG", "U/A", "GP", "UA"]:
+        return "Watch with parents"
+    elif certificate_name in ["PG-13", "TV-14"]:
+        return "13-15 year old"
+    elif certificate_name == "16":
+        return "16-17 year old"
+    elif certificate_name in ["R", "TV-MA"]:
+        return "Adults"
+    else:
+        return "Unrated"
+
 def cleaning_pipeline(data, save_folder, save_filename):
     """
     Performs a series of data cleaning operations on the input DataFrame 'data' and saves the cleaned data to a CSV file
@@ -19,7 +34,7 @@ def cleaning_pipeline(data, save_folder, save_filename):
     data.loc[non_numeric, "released_year"] = 1995
     data["runtime"] = data["runtime"].str.replace(" min", "").astype(int)
     data["gross"] = data[data["gross"].notna()]["gross"].astype(str).str.replace(",", "").astype(int)
-    data['certificate'].fillna('Unrated', inplace=True)
+    data['certificate'] = data['certificate'].apply(certificate_grouping)
     data['meta_score'].fillna(data['meta_score'].median(), inplace=True)
     data['gross'].fillna(data["gross"].median(), inplace=True)
     save_path = os.path.join(save_folder, f"{save_filename}.csv")
