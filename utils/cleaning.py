@@ -1,9 +1,9 @@
 import os
-
+import ast
 
 def certificate_grouping(certificate_name):
     if certificate_name in ["U", "G", "A", "Passed", "Approved"]:
-        return "All certificates"
+        return "All ages"
     elif certificate_name in ["PG", "TV-PG", "U/A", "GP", "UA"]:
         return "Watch with parents"
     elif certificate_name in ["PG-13", "TV-14"]:
@@ -29,7 +29,7 @@ def cleaning_pipeline(data, save_folder, save_filename):
     """
     data = data.loc[:, ~data.columns.str.startswith('Unnamed')]
     data.columns = data.columns.str.lower()
-    data["genre"] = data["genre"].str.split(",")
+    data["genre"] = data["genre"].str.split(", ")
     non_numeric = ~data["released_year"].str.isdigit()
     data.loc[non_numeric, "released_year"] = 1995
     data["runtime"] = data["runtime"].str.replace(" min", "").astype(int)
