@@ -2,6 +2,21 @@ import os
 import ast
 
 def certificate_grouping(certificate_name):
+    """
+    Group movie certificates into broad categories based on age suitability
+
+    Parameters:
+    - certificate_name (str): The certificate name or code to categorize
+
+    Returns:
+    - str: A string representing the age group category:
+      - "All ages" for certificates like U, G, A, Passed, Approved
+      - "Watch with parents" for certificates like PG, TV-PG, U/A, GP, UA
+      - "13-15 year old" for certificates like PG-13, TV-14
+      - "16-17 year old" for certificate 16
+      - "Adults" for certificates like R, TV-MA
+      - "Unrated" for any other certificates not listed
+    """
     if certificate_name in ["U", "G", "A", "Passed", "Approved"]:
         return "All ages"
     elif certificate_name in ["PG", "TV-PG", "U/A", "GP", "UA"]:
