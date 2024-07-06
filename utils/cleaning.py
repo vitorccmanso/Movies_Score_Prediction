@@ -17,15 +17,13 @@ def certificate_grouping(certificate_name):
       - "Adults" for certificates like R, TV-MA
       - "Unrated" for any other certificates not listed
     """
-    if certificate_name in ["U", "G", "A", "Passed", "Approved"]:
+    if certificate_name in ["U", "G", "Passed", "Approved"]:
         return "All ages"
     elif certificate_name in ["PG", "TV-PG", "U/A", "GP", "UA"]:
         return "Watch with parents"
-    elif certificate_name in ["PG-13", "TV-14"]:
-        return "13-15 year old"
-    elif certificate_name == "16":
-        return "16-17 year old"
-    elif certificate_name in ["R", "TV-MA"]:
+    elif certificate_name in ["PG-13", "TV-14", "16"]:
+        return "13-16 year old"
+    elif certificate_name in ["R", "TV-MA", "A"]:
         return "Adults"
     else:
         return "Unrated"
