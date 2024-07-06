@@ -1,5 +1,11 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import re
+from collections import Counter
+from wordcloud import WordCloud
+import nltk
+#nltk.download('stopwords')
+from nltk.corpus import stopwords
 
 class Visualization:
     """
@@ -139,7 +145,7 @@ class Visualization:
         """
         fig, ax = self.create_subplots(rows, columns, figsize=(18, 12))
         cols = self.data.drop(columns=target).select_dtypes(include="number")
-        self.plot_columns(cols, sns.scatterplot, ax, "IMDB Rating x ", target=target)
+        self.plot_columns(cols, sns.scatterplot, ax, f"{target.capitalize()} x ", target=target)
         self.remove_unused_axes(fig, ax, cols.shape[1])
         plt.tight_layout()
         plt.show()
@@ -157,7 +163,150 @@ class Visualization:
         """
         fig, ax = self.create_subplots(rows, columns, figsize=figsize)
         cols = self.data[cols]
-        self.plot_columns(cols, sns.boxplot, ax, "IMDB Rating x ", target=target)
+        self.plot_columns(cols, sns.boxplot, ax, f"{target.capitalize()} x ", target=target)
         self.remove_unused_axes(fig, ax, cols.shape[1])
+        plt.tight_layout()
+        plt.show()
+
+    def facegrid_hist_target(self, facecol, target):
+        """
+        Generates FacetGrid scatterplots for numerical columns based on target values
+
+        Parameters:
+        - facecol (str): Name of the column for the grid
+        - target (str): Name of the target variable
+        """
+        data_copy = self.data.copy()
+        value_counts = data_copy[facecol].value_counts()
+        if len(value_counts) > 6:
+            top_values = value_counts.head(6).index
+            data_copy = data_copy[data_copy[facecol].isin(top_values)]
+        for col in data_copy.drop(columns=[target]).select_dtypes(include="number"):
+            g = sns.FacetGrid(data_copy, col=facecol)
+            g.map(sns.scatterplot, col, target)
+            plt.show()
+
+    def plot_scatter_numericals_target(self, rows, columns, target, x):
+        """
+        Plot scatter plots for numerical features with the target variable as hue
+
+        Parameters:
+        - rows (int): Number of rows for subplots grid
+        - columns (int): Number of columns for subplots grid
+        - target (str): Name of the target variable
+        - x (str): Name of the feature variable for the x-axis
+        """
+        fig, ax = self.create_subplots(rows, columns, figsize=(18, 12))
+        cols = self.data.drop(columns=[target, x]).select_dtypes(include="number")
+        for i, col in enumerate(cols):
+            im = ax[i].scatter(y=self.data[col], x=self.data[x], c=self.data[target], cmap="tab20c", label="Rating", s=10)
+            cbar = fig.colorbar(im, ax=ax[i], label="Rating")
+            ax[i].set_xlabel(x)
+            ax[i].set_ylabel(col)
+            ax[i].set_title(f"{x.capitalize()} x {col.capitalize()}")
+        self.remove_unused_axes(fig, ax, cols.shape[1])
+        plt.tight_layout()
+        plt.show()
+
+class TextPattern:
+    """
+    A class for analyzing patterns in text data
+
+    Attributes:
+    - summaries (list): List of movie summaries
+
+    Methods:
+    - __init__: Initialize the TextPattern object
+    - clean_text: Clean the text by removing non-alphanumeric characters
+    - sort_words_by_frequency: Sort words by frequency
+    - wordcloud: Generate and display a word cloud of movie summaries
+    - summary_lengths: Plot the distribution of summary name lengths
+    - word_frequencies: Plot the top 20 most frequent words in movie summaries
+    - plot: Plot the data
+    """
+    def __init__(self, summaries):
+        """
+        Initialize the TextPattern object
+
+        Parameters:
+        - summaries (list): List of movie summaries
+        """
+        self.summaries = summaries
+        self.stop_words = set(stopwords.words('english'))
+    
+    def clean_text(self, text):
+        """
+        Clean the text by removing non-alphanumeric characters
+
+        Parameters:
+        - text (str): Input text to be cleaned
+
+        Returns:
+        - str: Cleaned text
+        """
+        cleaned_text = re.sub(r'[^a-zA-Z\s]', "", text)
+        return cleaned_text
+
+    def sort_words_by_frequency(self, word_freq):
+        """
+        Sort words by frequency
+
+        Parameters:
+        - word_freq (Counter): Counter object containing word frequencies
+
+        Returns:
+        - tuple: Sorted words and their corresponding counts
+        """
+        sorted_word_freq = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
+        sorted_words = [word[0] for word in sorted_word_freq]
+        sorted_counts = [word[1] for word in sorted_word_freq]
+        return sorted_words, sorted_counts
+    
+    def wordcloud(self):
+        """
+        Generate and display a word cloud of movie summaries
+        """
+        cleaned_summaries = [self.clean_text(summary) for summary in self.summaries]
+        cleaned_text = " ".join(cleaned_summaries)
+        self.plot(x=cleaned_text, title="Word Cloud of Summaries")
+    
+    def summary_lengths(self):
+        """
+        Plot the distribution of summary name lengths
+        """
+        text_lengths = [len(summary) for summary in self.summaries]
+        self.plot(x=text_lengths, plot_func=sns.histplot, title="Distribution of Summary Lengths")
+    
+    def word_frequencies(self):
+        """
+        Plot the top 20 most frequent words in movie summaries
+        """
+        cleaned_summaries = [self.clean_text(summary) for summary in self.summaries]
+        all_words = " ".join(cleaned_summaries).split()
+        word_freq = Counter([word for word in all_words if word.lower() not in self.stop_words])
+        sorted_words, sorted_counts = self.sort_words_by_frequency(word_freq)
+        self.plot(x=sorted_words[:20], y=sorted_counts[:20], plot_func=sns.barplot, title="Top 20 Most Frequent Words in Summaries")
+
+    def plot(self, x=None, y=None, plot_func=None, title=""):
+        """
+        Plot the data
+
+        Parameters:
+        - x (array-like): Data for the x-axis
+        - y (array-like): Data for the y-axis
+        - plot_func (function): Plotting function
+        - title (str): Plot title
+        """
+        plt.figure(figsize=(12, 6))
+        if plot_func == sns.histplot:
+            plot_func(x=x, kde=True)
+        elif plot_func == sns.barplot:
+            plot_func(x=x, y=y)
+            plt.xticks(rotation=45)
+        else:
+           wordcloud = WordCloud(stopwords=self.stop_words, width=800, height=400, background_color="white").generate(x)
+           plt.imshow(wordcloud, interpolation="bilinear")
+           plt.axis("off")
+        plt.title(title)
         plt.tight_layout()
         plt.show()
