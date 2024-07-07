@@ -268,7 +268,8 @@ class TextPattern:
         """
         cleaned_summaries = [self.clean_text(summary) for summary in self.summaries]
         cleaned_text = " ".join(cleaned_summaries)
-        self.plot(x=cleaned_text, title="Word Cloud of Summaries")
+        words_in_cloud = self.plot(x=cleaned_text, title="Word Cloud of Summaries")
+        return words_in_cloud
     
     def summary_lengths(self):
         """
@@ -277,15 +278,24 @@ class TextPattern:
         text_lengths = [len(summary) for summary in self.summaries]
         self.plot(x=text_lengths, plot_func=sns.histplot, title="Distribution of Summary Lengths")
     
-    def word_frequencies(self):
+    def word_frequencies(self, words_list=None):
         """
         Plot the top 20 most frequent words in movie summaries
+
+        Parameters:
+        - words_list (list): List of specific words to plot their frequencies. Defaults to None
         """
         cleaned_summaries = [self.clean_text(summary) for summary in self.summaries]
         all_words = " ".join(cleaned_summaries).split()
-        word_freq = Counter([word for word in all_words if word.lower() not in self.stop_words])
-        sorted_words, sorted_counts = self.sort_words_by_frequency(word_freq)
-        self.plot(x=sorted_words[:20], y=sorted_counts[:20], plot_func=sns.barplot, title="Top 20 Most Frequent Words in Summaries")
+        if words_list is None:
+            word_freq = Counter([word for word in all_words if word.lower() not in self.stop_words])
+            sorted_words, sorted_counts = self.sort_words_by_frequency(word_freq)
+            title = "Top 20 Most Frequent Words in Summaries"
+        else:
+            word_freq = Counter([word for word in all_words if word.lower() not in self.stop_words and word in words_list])
+            sorted_words, sorted_counts = self.sort_words_by_frequency(word_freq)
+            title = "Frequency of Genre Words in Summaries"
+        self.plot(x=sorted_words[:20], y=sorted_counts[:20], plot_func=sns.barplot, title=title)
 
     def plot(self, x=None, y=None, plot_func=None, title=""):
         """
@@ -304,9 +314,13 @@ class TextPattern:
             plot_func(x=x, y=y)
             plt.xticks(rotation=45)
         else:
-           wordcloud = WordCloud(stopwords=self.stop_words, width=800, height=400, background_color="white").generate(x)
-           plt.imshow(wordcloud, interpolation="bilinear")
-           plt.axis("off")
+            wordcloud = WordCloud(stopwords=self.stop_words, width=800, height=400, background_color="white").generate(x)
+            words_in_cloud = list(wordcloud.words_.keys())
+            plt.imshow(wordcloud, interpolation="bilinear")
+            plt.axis("off")
         plt.title(title)
         plt.tight_layout()
         plt.show()
+
+        if plot_func == None:
+            return words_in_cloud if 'words_in_cloud' in locals() else None
