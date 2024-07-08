@@ -136,8 +136,8 @@ class ColumnMapping:
         Save the column mappings to a pkl file
 
         Parameters:
-        - mapping (dict): The column mappings to save
-        - save_folder (str): Folder path where the cleaned CSV file will be saved
+        - mapping (dict): The column mapping to save
+        - save_folder (str): Folder path where the collumn mapping will be saved
         - save_filename (str): Filename for the pkl file
         """
         file_path = os.path.join(save_folder, f"{save_filename}.pkl")
