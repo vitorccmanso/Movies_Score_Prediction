@@ -131,51 +131,78 @@ class ColumnMapping:
         self.data = data
         self.column_mappings = {}
 
-    def save_mapping(self, mapping, file_path='../artifacts/column_mappings.pkl'):
+    def save_mapping(self, mapping, save_folder, save_filename):
         """
         Save the column mappings to a pkl file
 
         Parameters:
         - mapping (dict): The column mappings to save
-        - file_path (str): The file path to save the mappings to
+        - save_folder (str): Folder path where the cleaned CSV file will be saved
+        - save_filename (str): Filename for the pkl file
         """
+        file_path = os.path.join(save_folder, f"{save_filename}.pkl")
         if not os.path.exists(os.path.dirname(file_path)):
             os.makedirs(os.path.dirname(file_path))
         with open(file_path, 'wb') as f:
             pickle.dump(mapping, f)
 
-    def certificate_grouping(self, certificate_name):
+    def certificate_grouping(self, certificate_name, mapping_type=1):
         """
         Group movie certificates into broad categories based on age suitability
 
         Parameters:
         - certificate_name (str): The certificate name or code to categorize
+        - mapping_type (int): Type of mapping to use:
+            - 1: Categorical mapping for one-hot encoding
+            - 2: Label mapping to use as numerical feature
 
         Returns:
-        - str: A string representing the age group category:
-          - "all_ages" for certificates like U, G, A, Passed, Approved
-          - "watch_with_parents" for certificates like PG, TV-PG, U/A, GP, UA
-          - "teens" for certificates like PG-13, TV-14, 16
-          - "adults" for certificates like R, TV-MA
-          - "unrated" for any other certificates not listed
+        - str: A string representing the age group category or an integer based on the mapping_type:
+        - Original mapping:
+            - "all_ages" for certificates like U, G, A, Passed, Approved
+            - "watch_with_parents" for certificates like PG, TV-PG, U/A, GP, UA
+            - "teens" for certificates like PG-13, TV-14, 16
+            - "adults" for certificates like R, TV-MA
+            - "unrated" for any other certificates not listed
+        - Modified mapping (integer):
+            - 0 for "all_ages"
+            - 1 for "watch_with_parents"
+            - 2 for "teens"
+            - 3 for "adults"
+            - -1 for "unrated"
         """
-        if certificate_name in ["u", "g", "passed", "approved"]:
-            return "all_ages"
-        elif certificate_name in ["pg", "tv-pg", "u/a", "gp", "ua"]:
-            return "watch_with_parents"
-        elif certificate_name in ["pg-13", "tv-14", "16"]:
-            return "teens"
-        elif certificate_name in ["r", "tv-ma", "a"]:
-            return "adults"
-        else:
-            return "unrated"
+        if mapping_type == 1:
+            if certificate_name in ["u", "g", "passed", "approved"]:
+                return "all_ages"
+            elif certificate_name in ["pg", "tv-pg", "u/a", "gp", "ua"]:
+                return "watch_with_parents"
+            elif certificate_name in ["pg-13", "tv-14", "16"]:
+                return "teens"
+            elif certificate_name in ["r", "tv-ma", "a"]:
+                return "adults"
+            else:
+                return "unrated"
+        elif mapping_type == 2:
+            if certificate_name in ["u", "g", "passed", "approved"]:
+                return 0
+            elif certificate_name in ["pg", "tv-pg", "u/a", "gp", "ua"]:
+                return 1
+            elif certificate_name in ["pg-13", "tv-14", "16"]:
+                return 2
+            elif certificate_name in ["r", "tv-ma", "a"]:
+                return 3
+            else:
+                return -1
 
-    def create_column_mapping(self, cat_cols):
+    def create_column_mapping(self, cat_cols, mapping_type=1):
         """
         Create mappings for categorical columns and apply them to the DataFrame
 
         Parameters:
         - cat_cols (list): List of categorical columns to map
+        - mapping_type (int): Type of mapping to use:
+            - 1: Categorical mapping for one-hot encoding
+            - 2: Label mapping to use as numerical feature
 
         Returns:
         - DataFrame: The transformed DataFrame
@@ -183,16 +210,27 @@ class ColumnMapping:
         """
         for col in cat_cols:
             col_counts = self.data[col].value_counts()
-            col_category_mapping = {
-                value: self.certificate_grouping(value) if col == "certificate" 
-                else (
-                    'multiple_movies' if count > 5 
-                    else 'few_movies' if count >= 2 
-                    else 'one_movie'
-                )
-                for value, count in col_counts.items()
-            }
-            self.data[col] = self.data[col].apply(lambda x: col_category_mapping.get(x, 'New'))
+            if mapping_type == 1:
+                col_category_mapping = {
+                    value: self.certificate_grouping(value, mapping_type=1) if col == "certificate" 
+                    else (
+                        "multiple_movies" if count > 5 
+                        else "few_movies" if count >= 2 
+                        else "one_movie"
+                    )
+                    for value, count in col_counts.items()
+                }
+            elif mapping_type == 2:
+                col_category_mapping = {
+                    value: self.certificate_grouping(value, mapping_type=2) if col == "certificate"
+                    else (
+                        3 if count > 5
+                        else 2 if count >= 2
+                        else 1
+                    )
+                    for value, count in col_counts.items()
+                }
+            self.data[col] = self.data[col].apply(lambda x: col_category_mapping.get(x, "New"))
             self.column_mappings[col] = col_category_mapping
         return self.data, self.column_mappings
 
