@@ -1,6 +1,6 @@
-# Movies IMDB Score Prediction
+# [Movies IMDB Score Prediction](https://moviepredapp.azurewebsites.net/)
 
-banner image
+![project header](images/header.png)
 
 ## Dataset
 The dataset for this project was given by Incidium, and is about movies with their ratings in IMDB.
@@ -117,3 +117,90 @@ These are the model parameters:
     random_state: 42
 }
 ```
+
+## App Usage
+
+The easiest way to use the app is by accessing this link: <https://moviepredapp.azurewebsites.net/>
+
+A prediction of the following data would be **8.8**:
+
+```json
+{'series_title': 'The Shawshank Redemption',
+ 'released_year': 1994,
+ 'certificate': 'A',
+ 'runtime': 142,
+ 'genre': 'Drama',
+ 'overview': 'Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.',
+ 'meta_score': 80.0,
+ 'director': 'Frank Darabont',
+ 'star1': 'Tim Robbins',
+ 'star2': 'Morgan Freeman',
+ 'star3': 'Bob Gunton',
+ 'star4': 'William Sadler',
+ 'no_of_votes': 2343110,
+ 'gross': 28341469
+}
+```
+
+However, since the deployment was made with the free plan from Azure, which only gives 60min of usage per day, the other way is through a Docker image or running with uvicorn. Here is a step by step guide on how to create and run this image and how to run the app locally through uvicorn:
+
+### Docker Image
+### Step 1: Build Docker Image
+
+The easiest way to build and run a docker image is with Docker Desktop. It can be downloaded [here](https://www.docker.com/products/docker-desktop/). Once installed, open Docker Desktop.
+Clone the repository and go to the folder with the Dockerfile. Then, run the following command to build the image:
+
+```shell
+docker build -t movie_pred:latest .
+```
+
+To check if the image was created successfully, run `docker images` in your CLI and you should see `movie_pred` listed.
+
+### Step 2: Run Docker Image
+
+In the same CLI, run the following command to run the image:
+
+```shell
+docker run -p 80:80 movie_pred:latest
+```
+
+You should see something like this:
+
+```shell
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:80 (Press CTRL+C to quit)
+```
+
+Open a web browser page and type `localhost` in the search bar. The app should load and be ready for use. Use the datasets in the folder `Datasets for app usage` to test the `Predict with Dataset` function, or create your dataset based on the original data. Or, explore the `Predict with Manual Data` function, to manually input a row of data for the model to predict.
+
+## Running locally trough uvicorn (this assumes that you have python installed)
+### Step 1: Install libraries
+
+Clone or download this repository, then go to the main folder of the project (where requirements.txt is).
+Open a command prompt in this folder and run this command:
+
+```shell
+pip install -r requirements.txt
+```
+
+### Step 2: Run the app
+
+On the same command prompt, run the following command to run the app:
+
+```shell
+uvicorn app.main:app --reload
+```
+
+You should see something like this:
+
+```shell
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [18496] using WatchFiles
+INFO:     Started server process [1344]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+```
+
+Copy the adress that the app is running, in this case `http://127.0.0.1:8000` and open it on a web browser, or simply type in the browser `localhost:8000`. The app should load and be ready for use. Use the datasets in the folder `Datasets for app usage` to test the `Predict with Dataset` function, or create your dataset based on the original data. Or, explore the `Predict with Manual Data` function, to manually input a row of data for the model to predict.
