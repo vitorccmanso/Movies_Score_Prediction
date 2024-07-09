@@ -220,6 +220,7 @@ class ColumnMapping:
                     )
                     for value, count in col_counts.items()
                 }
+                default_value = "one_movie"
             elif mapping_type == 2:
                 col_category_mapping = {
                     value: self.certificate_grouping(value, mapping_type=2) if col == "certificate"
@@ -230,7 +231,8 @@ class ColumnMapping:
                     )
                     for value, count in col_counts.items()
                 }
-            self.data[col] = self.data[col].apply(lambda x: col_category_mapping.get(x, "New"))
+                default_value = 1
+            self.data[col] = self.data[col].apply(lambda x: col_category_mapping.get(x, default_value))
             self.column_mappings[col] = col_category_mapping
         return self.data, self.column_mappings
 
