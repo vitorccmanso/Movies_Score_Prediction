@@ -1,4 +1,4 @@
-# [Movies IMDB Score Prediction](https://moviepredapp.azurewebsites.net/)
+# [Movies IMDB Score Prediction](https://moviespredapp.azurewebsites.net/)
 
 ![project header](images/header.png)
 
@@ -120,7 +120,7 @@ These are the model parameters:
 
 ## App Usage
 
-The easiest way to use the app is by accessing this link: <https://moviepredapp.azurewebsites.net/>
+The easiest way to use the app is by accessing this link: <https://moviespredapp.azurewebsites.net/>
 
 A prediction of the following data would be **8.8**:
 
